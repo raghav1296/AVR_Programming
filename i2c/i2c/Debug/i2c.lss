@@ -1,0 +1,158 @@
+
+i2c.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000000b4  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .comment      00000030  00000000  00000000  00000108  2**0
+                  CONTENTS, READONLY
+  2 .debug_aranges 00000050  00000000  00000000  00000138  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   00000171  00000000  00000000  00000188  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 0000010f  00000000  00000000  000002f9  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   00000145  00000000  00000000  00000408  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  00000084  00000000  00000000  00000550  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    00000156  00000000  00000000  000005d4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_loc    0000002d  00000000  00000000  0000072a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_ranges 00000058  00000000  00000000  00000757  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 2a 00 	jmp	0x54	; 0x54 <__ctors_end>
+   4:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+   8:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+   c:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  10:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  14:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  18:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  1c:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  20:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  24:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  28:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  2c:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  30:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  34:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  38:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  3c:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  40:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  44:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  48:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  4c:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+  50:	0c 94 34 00 	jmp	0x68	; 0x68 <__bad_interrupt>
+
+00000054 <__ctors_end>:
+  54:	11 24       	eor	r1, r1
+  56:	1f be       	out	0x3f, r1	; 63
+  58:	cf e5       	ldi	r28, 0x5F	; 95
+  5a:	d8 e0       	ldi	r29, 0x08	; 8
+  5c:	de bf       	out	0x3e, r29	; 62
+  5e:	cd bf       	out	0x3d, r28	; 61
+  60:	0e 94 49 00 	call	0x92	; 0x92 <main>
+  64:	0c 94 58 00 	jmp	0xb0	; 0xb0 <_exit>
+
+00000068 <__bad_interrupt>:
+  68:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+0000006c <init_twi>:
+#include <compat/twi.h>
+#include <avr/interrupt.h>
+#define BAUD 9600
+void init_twi(void)
+{
+	TWCR|=1<<TWEN;             //no need of setting TWSR
+  6c:	86 b7       	in	r24, 0x36	; 54
+  6e:	84 60       	ori	r24, 0x04	; 4
+  70:	86 bf       	out	0x36, r24	; 54
+    TWBR=72;                   //prescale=1 and SCL=100khz
+  72:	88 e4       	ldi	r24, 0x48	; 72
+  74:	80 b9       	out	0x00, r24	; 0
+  76:	08 95       	ret
+
+00000078 <TWIStart>:
+}
+void TWIStart(void)
+{
+	TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
+  78:	84 ea       	ldi	r24, 0xA4	; 164
+  7a:	86 bf       	out	0x36, r24	; 54
+	while ((TWCR & (1<<TWINT)) == 0);
+  7c:	06 b6       	in	r0, 0x36	; 54
+  7e:	07 fe       	sbrs	r0, 7
+  80:	fd cf       	rjmp	.-6      	; 0x7c <TWIStart+0x4>
+}
+  82:	08 95       	ret
+
+00000084 <TWIWrite>:
+{
+	TWCR = (1<<TWINT)|(1<<TWSTO)|(1<<TWEN);
+}
+void TWIWrite(char u8data)
+{
+	TWDR = u8data;
+  84:	83 b9       	out	0x03, r24	; 3
+	TWCR = (1<<TWINT)|(1<<TWEN);
+  86:	84 e8       	ldi	r24, 0x84	; 132
+  88:	86 bf       	out	0x36, r24	; 54
+	while ((TWCR & (1<<TWINT)) == 0);
+  8a:	06 b6       	in	r0, 0x36	; 54
+  8c:	07 fe       	sbrs	r0, 7
+  8e:	fd cf       	rjmp	.-6      	; 0x8a <TWIWrite+0x6>
+}
+  90:	08 95       	ret
+
+00000092 <main>:
+	while ((TWCR & (1<<TWINT)) == 0);
+}
+int main(void)
+{
+	char a;
+	DDRB=255;
+  92:	8f ef       	ldi	r24, 0xFF	; 255
+  94:	87 bb       	out	0x17, r24	; 23
+   PORTB=0b01010101;
+  96:	85 e5       	ldi	r24, 0x55	; 85
+  98:	88 bb       	out	0x18, r24	; 24
+	while ((TWCR & (1<<TWINT)) == 0);
+}
+//send stop signal
+void TWIStop(void)
+{
+	TWCR = (1<<TWINT)|(1<<TWSTO)|(1<<TWEN);
+  9a:	d4 e9       	ldi	r29, 0x94	; 148
+	char a;
+	DDRB=255;
+   PORTB=0b01010101;
+    while(1)
+    {
+		a=PORTB;
+  9c:	c8 b3       	in	r28, 0x18	; 24
+       init_twi();
+  9e:	0e 94 36 00 	call	0x6c	; 0x6c <init_twi>
+	   TWIStart();
+  a2:	0e 94 3c 00 	call	0x78	; 0x78 <TWIStart>
+	   TWIWrite(a);
+  a6:	8c 2f       	mov	r24, r28
+  a8:	0e 94 42 00 	call	0x84	; 0x84 <TWIWrite>
+	while ((TWCR & (1<<TWINT)) == 0);
+}
+//send stop signal
+void TWIStop(void)
+{
+	TWCR = (1<<TWINT)|(1<<TWSTO)|(1<<TWEN);
+  ac:	d6 bf       	out	0x36, r29	; 54
+  ae:	f6 cf       	rjmp	.-20     	; 0x9c <main+0xa>
+
+000000b0 <_exit>:
+  b0:	f8 94       	cli
+
+000000b2 <__stop_program>:
+  b2:	ff cf       	rjmp	.-2      	; 0xb2 <__stop_program>
